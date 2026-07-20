@@ -1,6 +1,6 @@
 from pydantic import BaseModel
+from . import Hub, Connection
 
 class Drone(BaseModel):
-    width: int
-    height: int
+    location: Hub|Connection
     id: int
