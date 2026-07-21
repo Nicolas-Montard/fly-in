@@ -60,7 +60,7 @@ class Visualizer():
             elif isinstance(drone.location, Connection):
                 x1, y1 = drone.location.hub1.x, drone.location.hub1.y
                 x2, y2 = drone.location.hub2.x, drone.location.hub2.y
-                position = self.scale_value((x1 + x2) / 2, (y1 + y2) / 2)
+                position = self.scale_value((x1 + x2) // 2, (y1 + y2) // 2)
                 self.draw_polygon(position, 7, "green")
                 drone_name = self.font.render(f"D{drone.id}", True, (0, 0, 0))
                 self.screen.blit(drone_name, (position[0] - (drone_name.get_width() // 2),
@@ -87,10 +87,3 @@ class Visualizer():
         self.screen.blit(turn_counter, (self.screen.get_width() // 2,
                                         self.screen.get_height() - 20))
         pygame.display.update()
-    
-    def event_checker(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return True
-        return False
