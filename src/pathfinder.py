@@ -13,7 +13,7 @@ class pathfinder:
         distances_from_start: dict[str, float] = {name: float('inf') for name in self.graph.hubs}
         distances_from_start[self.graph.start.name] = 0
         previous_hub: dict[str, str] = {}
-        unvisited: set[str] = {hub.name for hub in self.graph.hubs}
+        unvisited: set[str] = {hub.name for hub in self.graph.hubs.values()}
 
         while unvisited:
             current_name = self.find_closest_unvisited(distances_from_start, unvisited)

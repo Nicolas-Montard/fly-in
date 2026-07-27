@@ -14,13 +14,13 @@ class Graph:
     def add_connection(self, connection: Connection) -> None:
         self.connections.append(connection)
 
-    def get_neighbors(self, hub: Hub) -> list[tuple[Hub, Connection]]:
-        result: list[tuple[Hub, Connection]] = []
+    def get_neighbors(self, hub: Hub) -> list[Hub]:
+        result: list[Hub] = []
         for connection in self.connections:
             if connection.hub1 == hub:
                 result.append(connection.hub1)
             elif connection.hub2 == hub:
-                result.append((connection.hub2))
+                result.append(connection.hub2)
         return result
 
     def get_hub(self, name: str) -> Hub:
