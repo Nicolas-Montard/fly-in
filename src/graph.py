@@ -18,9 +18,9 @@ class Graph:
         result: list[tuple[Hub, Connection]] = []
         for connection in self.connections:
             if connection.hub1 == hub:
-                result.append((connection.hub2, connection))
+                result.append(connection.hub1)
             elif connection.hub2 == hub:
-                result.append((connection.hub1, connection))
+                result.append((connection.hub2))
         return result
 
     def get_hub(self, name: str) -> Hub:
