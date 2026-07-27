@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from . import Graph, Hub
 
 class pathfinder:
@@ -7,12 +6,11 @@ class pathfinder:
         "priority": 1,
         "restricted": 2,
     }
-    def __init__(self, graph: Graph):
+    def __init__(self, graph: Graph) -> None:
         self.graph: Graph = graph
     
-    def find_shortest_path_for_one_drone(self):
-        
-        distances_from_start: dict[str, float] = {hub.name: float('inf') for hub in self.graph.hubs}
+    def find_shortest_path_for_one_drone(self) -> list[Hub]|None:
+        distances_from_start: dict[str, float] = {name: float('inf') for name in self.graph.hubs}
         distances_from_start[self.graph.start.name] = 0
         previous_hub: dict[str, str] = {}
         unvisited: set[str] = {hub.name for hub in self.graph.hubs}
@@ -53,24 +51,3 @@ class pathfinder:
             path_names.append(current)
         path_names.reverse()
         return [self.graph.get_hub(name) for name in path_names]
-=======
-from . import Graph, Hub, Connection
-import copy
-
-class Pathfinder():
-    def __init__(self, graph: Graph) -> None:
-        self.graph = graph
-    
-    def get_drones_path(self) -> dict[int, list[Hub|Connection]]:
-        self.drone_path: dict[int, list[Hub|Connection]] = {}
-        for i in range(len(self.graph.drones)):
-            self.drone_path[i] = []
-    
-    def get_one_drone_path(self) -> list[Hub|Connection]:
-        path_to_explore: list[Hub] = []
-        neighbors = self.graph.get_neighbors(self.graph.start)
-        for neigbor in neighbors:
-            if neigbor not in path_explored:
-                path_to_explore() 
-
->>>>>>> 5bf03d57007243ab2023a5c9696ef7ddbf87abff
