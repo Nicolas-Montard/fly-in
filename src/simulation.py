@@ -22,7 +22,7 @@ class Simulation:
             if drone.location == self.graph.end:
                 continue
             print(f"D{drone.id}-{drone.location.get_name()}", end=" ")
-            drone.location = self.drones_path[i].pop()
+            self.graph.update_location(self.drones_path[i].pop(-1))
             print(f"D{drone.id}-{drone.location.get_name()}")
     
     def event_handler(self):

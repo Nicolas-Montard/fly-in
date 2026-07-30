@@ -9,3 +9,6 @@ class Connection(BaseModel):
 
     def get_name(self) -> str:
         return f"{self.hub1.name}-{self.hub2.name}"
+    
+    def get_max_capacity(self) -> int:
+        return self.max_link_capacity

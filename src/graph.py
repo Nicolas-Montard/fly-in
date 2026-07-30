@@ -14,14 +14,19 @@ class Graph:
     def add_connection(self, connection: Connection) -> None:
         self.connections.append(connection)
 
-    def get_neighbors(self, hub: Hub) -> list[Hub]:
-        result: list[Hub] = []
+    def get_neighbors(self, hub: Hub) -> list[tuple[Hub, Connection]]:
+        result: list[tuple[Hub, Connection]] = []
         for connection in self.connections:
             if connection.hub1 == hub:
-                result.append(connection.hub1)
+                result.append((connection.hub2, connection))
             elif connection.hub2 == hub:
-                result.append(connection.hub2)
+                result.append((connection.hub1, connection))
         return result
 
     def get_hub(self, name: str) -> Hub:
         return self.hubs[name]
+    
+    def update_location(self, drone: Drone, location: Connection|Hub) -> None:
+        drone.location.current_drone -= 1
+        drone.location = location
+        drone.location.current_drone += 1

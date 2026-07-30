@@ -15,3 +15,6 @@ class Hub(BaseModel):
 
     def get_name(self) -> str:
         return self.name
+    
+    def get_max_capacity(self) -> int:
+        return self.max_drones

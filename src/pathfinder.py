@@ -1,4 +1,4 @@
-from . import Graph, Hub
+from . import Graph, Hub, Connection, Drone
 
 class pathfinder:
     ZONE_COST = {
@@ -9,12 +9,12 @@ class pathfinder:
     def __init__(self, graph: Graph) -> None:
         self.graph: Graph = graph
     
-    def find_shortest_path_for_one_drone(self) -> list[Hub]|None:
+    def find_shortest_path_one_drone(self) -> list[Hub|Connection]|None:
         distances_from_start: dict[str, float] = {name: float('inf') for name in self.graph.hubs}
         distances_from_start[self.graph.start.name] = 0
         previous_hub: dict[str, str] = {}
-        unvisited: set[str] = {hub.name for hub in self.graph.hubs.values()}
-
+        unvisited: set[str] = set(self.graph.hubs.keys())
+        
         while unvisited:
             current_name = self.find_closest_unvisited(distances_from_start, unvisited)
             if current_name is None:
@@ -25,7 +25,7 @@ class pathfinder:
             unvisited.remove(current_name)
             current_hub = self.graph.get_hub(current_name)
             
-            for neighbor in self.graph.get_neighbors(current_hub):
+            for neighbor, connection in self.graph.get_neighbors(current_hub):
                 if neighbor.zone_type == "blocked":
                     continue
                 if neighbor.name not in unvisited:
