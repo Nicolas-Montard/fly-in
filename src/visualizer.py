@@ -12,8 +12,8 @@ class Visualizer():
         self.calculate_size_of_graph(width, height)
 
     def calculate_size_of_graph(self, width: int, height: int) -> None:
-        x_coordinates = [hub.x for hub in self.graph.hubs]
-        y_coordinates = [hub.y for hub in self.graph.hubs]
+        x_coordinates = [hub.x for hub in self.graph.hubs.values()]
+        y_coordinates = [hub.y for hub in self.graph.hubs.values()]
         self.min_x = min(x_coordinates)
         self.max_x = max(x_coordinates)
         self.min_y = min(y_coordinates)
@@ -38,7 +38,7 @@ class Visualizer():
             pygame.draw.line(self.screen, (0, 0, 0), hub1_pos, hub2_pos, 2)
     
     def draw_hubs(self) -> None:
-        for hub in self.graph.hubs:
+        for hub in self.graph.hubs.values():
             position = self.scale_value(hub.x, hub.y)
             try:
                 pygame.draw.circle(self.screen, hub.color, position, 18)

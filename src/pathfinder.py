@@ -43,7 +43,7 @@ class pathfinder:
             return None
         return min(unvisited, key=lambda name: distances[name])
     
-    def recreate_path(self, previous: dict[str, str], start_name: str, end_name: str) -> list[Hub]:
+    def recreate_path(self, previous: dict[str, str], start_name: str, end_name: str) -> list[Hub|Connection]:
         path_names = [end_name]
         current = end_name
         while current != start_name:
