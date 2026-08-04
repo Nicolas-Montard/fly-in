@@ -3,12 +3,13 @@ import pygame
 from sys import exit
 
 class Visualizer():
-    def __init__(self, graph: Graph, width: int=900, height: int=700, padding: int=60) -> None:
+    def __init__(self, graph: Graph, width: int=1500, height: int=1000, padding: int=60) -> None:
         pygame.init()
         self.graph: Graph = graph
         self.screen = pygame.display.set_mode((width, height))
         self.padding = padding
         self.font = pygame.font.Font(None, 20)
+        self.small_font = pygame.font.Font(None, 12)
         self.calculate_size_of_graph(width, height)
 
     def calculate_size_of_graph(self, width: int, height: int) -> None:
@@ -45,26 +46,25 @@ class Visualizer():
             except ValueError:
                 pygame.draw.circle(self.screen, "black", position, 18)
             hub_name = self.font.render(hub.name, True, (0, 0, 0))
-            self.screen.blit(hub_name, (position[0] - (hub_name.get_width() // 2), position[1] - 10))
+            self.screen.blit(hub_name, (position[0] - (hub_name.get_width() // 2), position[1] - 18 - hub_name.get_height() - 2))
     
     def draw_drones(self) -> None:
         for drone in self.graph.drones:
+            offset = (drone.id % 3) * 4
             if isinstance(drone.location, Hub):
                 position = self.scale_value(drone.location.x, drone.location.y)
-                offset = (drone.id % 5) * 6
                 center = (position[0] + offset, position[1] + offset)
-                self.draw_polygon(center, 7, "green")
-                drone_name = self.font.render(f"D{drone.id}", True, (0, 0, 0))
-                self.screen.blit(drone_name, (position[0] - (drone_name.get_width() // 2),
-                                              position[1] - (drone_name.get_height() // 2)))
             elif isinstance(drone.location, Connection):
                 x1, y1 = drone.location.hub1.x, drone.location.hub1.y
                 x2, y2 = drone.location.hub2.x, drone.location.hub2.y
-                position = self.scale_value((x1 + x2) // 2, (y1 + y2) // 2)
-                self.draw_polygon(position, 7, "green")
-                drone_name = self.font.render(f"D{drone.id}", True, (0, 0, 0))
-                self.screen.blit(drone_name, (position[0] - (drone_name.get_width() // 2),
-                                              position[1] - (drone_name.get_height() // 2)))
+                center = self.scale_value(((x1 + x2) // 2) + offset, ((y1 + y2) // 2) + offset)
+            else:
+                continue
+
+            self.draw_polygon(center, 9, "green")
+            drone_name = self.small_font.render(f"D{drone.id}", True, (0, 0, 0))
+            self.screen.blit(drone_name, (center[0] - (drone_name.get_width() // 2),
+                                        center[1] - (drone_name.get_height() // 2)))
                 
     
     def draw_polygon(self, center, size, color):
@@ -83,7 +83,7 @@ class Visualizer():
     def render(self, turn_number):
         self.screen.fill((255, 255, 255))
         self.draw_graph()
-        turn_counter = self.font.render(f"Turn {turn_number}", True, (255, 255, 255))
+        turn_counter = self.font.render(f"Turn {turn_number}", True, (0, 0, 0))
         self.screen.blit(turn_counter, (self.screen.get_width() // 2,
                                         self.screen.get_height() - 20))
         pygame.display.update()

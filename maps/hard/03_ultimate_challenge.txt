@@ -1,5 +1,5 @@
 # Hard Level 3: THE ULTIMATE CHALLENGE - All tricks combined
-nb_drones: 15
+nb_drones: 3
 
 start_hub: start 0 0 [color=green]
 
@@ -18,8 +18,8 @@ hub: maze_loop4 3 2 [color=purple max_drones=3]
 hub: maze_correct 2 0 [color=blue max_drones=3]
 
 # Layer 3: Capacity nightmare section
-hub: bottleneck1 3 0 [color=yellow max_drones=2]
-hub: bottleneck2 4 0 [color=yellow max_drones=1]
+hub: bottleneck1 3 0 [color=yellow max_drones=2 zone=restricted]
+hub: bottleneck2 4 0 [color=yellow max_drones=1 zone=restricted]
 hub: overflow1 3 -1 [zone=restricted color=orange max_drones=3]
 hub: overflow2 4 -1 [zone=restricted color=orange max_drones=3]
 

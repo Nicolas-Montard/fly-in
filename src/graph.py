@@ -30,3 +30,10 @@ class Graph:
         drone.location.current_drone -= 1
         drone.location = location
         drone.location.current_drone += 1
+    
+    def get_connection_between_hub(self, hub1: Hub, hub2: Hub) -> Connection | None:
+        for connection in self.connections:
+            if (connection.hub1 == hub1 and connection.hub2 == hub2) or \
+            (connection.hub1 == hub2 and connection.hub2 == hub1):
+                return connection
+        return None

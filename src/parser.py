@@ -1,4 +1,5 @@
-from typing import Any
+from typing import Any, Literal
+from . import Graph, Hub, Connection, Drone
 
 class ParsingError(Exception):
     def __init__(self, message: str, ligne: int | None = None):
@@ -21,6 +22,7 @@ class Parser():
         self.data["connections"] = self.connections
         self.hub_names: set[str] = set()
         self.hub_coord: set[tuple[int, int]] = set()
+        self.connection_seen: set[tuple[str, str]] = set()
 
 
     def read_data(self):
@@ -80,11 +82,13 @@ class Parser():
         self.verif_hub_coord(values[1], values[2])
         hub = {
             "name": values[0],
-            "x": values[1],
-            "y": values[2]
+            "x": int(values[1]),
+            "y": int(values[2])
         }
         if len(values) == 4:
             formated_metadata = self.format_metadata(values[3])
+            if split_line[0] in ("start_hub", "end_hub"):
+                formated_metadata.pop("max_drones", None)
             self.verif_hub_metadata(formated_metadata)
             hub.update(formated_metadata)
         if split_line[0] == "hub":
@@ -125,11 +129,28 @@ class Parser():
         self.hub_coord.add((x, y))
 
     def verif_hub_metadata(self, metadata: dict) -> None:
-        for key in metadata.keys():
+        zone_type = ("normal", "blocked", "restricted", "priority")
+        for key, value in metadata.items():
             if key not in ("zone", "color", "max_drones"):
                 raise ParsingError(f"The metadata {key} is not a valid type, "
                                    "valid type are: zone, color, max_drones",
                                    self.counter_line)
+            if key == "zone":
+                if value not in zone_type:
+                    raise ParsingError(f"The metadata {key} cannot have this value",
+                                       self.counter_line)
+            if key == "max_drones":
+                try:
+                    metadata[key] = int(value)
+                except ValueError:
+                    raise ParsingError(f"The metadata {key} is not a valid integer",
+                                        self.counter_line)
+                if metadata[key] < 1:
+                    raise ParsingError(f"The metadata {key} cannot be inferior to 1",
+                                        self.counter_line)
+        if "zone" in metadata:
+            metadata["zone_type"] = metadata.pop("zone")
+            
         
     def split_line(self, line: str) -> list[str]:
         split_line = line.split(":", 1)
@@ -149,6 +170,10 @@ class Parser():
         if hub1 not in self.hub_names or hub2 not in self.hub_names:
             raise ParsingError(f"{values[0]} contain at least 1 invalid"
                                "hub name", self.counter_line)
+        unique_connection = tuple(sorted((hub1, hub2)))
+        if unique_connection in self.connection_seen:
+            raise ParsingError(f"connection {values[0]} already defined", self.counter_line)
+        self.connection_seen.add(unique_connection)
         connection = {
             "hub_name1": hub1,
             "hub_name2": hub2
@@ -160,9 +185,49 @@ class Parser():
         self.connections.append(connection)
 
     def verif_connection_metadata(self, metadata: dict):
-            for key in metadata.keys():
-                if key not in (tuple("max_link_capacity")):
+            for key, value in metadata.items():
+                if key not in ("max_link_capacity",):
                     raise ParsingError(f"The metadata {key} "
                                        "is not a valid type, "
                                        "valid type are: max_link_capacity",
-                                       self.counter_line)
+                                        self.counter_line)
+                if key == "max_link_capacity":
+                    try:
+                        metadata[key] = int(value)
+                    except ValueError:
+                        raise ParsingError(f"The metadata {key} is not a valid integer",
+                                            self.counter_line)
+                    if metadata[key] < 1:
+                        raise ParsingError(f"The metadata {key} cannot be inferior to 1",
+                                            self.counter_line)
+                        
+    def build_graph(self) -> Graph:
+        if "start_hub" not in self.data:
+            raise ParsingError("no start_hub defined")
+        if "end_hub" not in self.data:
+            raise ParsingError("no end_hub defined")
+        graph = Graph()
+        start_hub = Hub(**self.data["start_hub"])
+        end_hub = Hub(**self.data["end_hub"])
+        graph.add_hub(start_hub)
+        graph.add_hub(end_hub)
+        graph.start = start_hub
+        graph.end = end_hub
+
+        for hub_data in self.hubs:
+            graph.add_hub(Hub(**hub_data))
+
+        for conn_data in self.connections:
+            hub1 = graph.get_hub(conn_data["hub_name1"])
+            hub2 = graph.get_hub(conn_data["hub_name2"])
+            connection = Connection(
+                hub1=hub1,
+                hub2=hub2,
+                max_link_capacity=conn_data.get("max_link_capacity", 1)
+            )
+            graph.add_connection(connection)
+        drones = [Drone(id=i + 1, location=start_hub) for i in range(self.data["nb_drones"])]
+        for drone in drones:
+            graph.drones.append(drone)
+
+        return graph

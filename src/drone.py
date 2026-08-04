@@ -3,4 +3,5 @@ from . import Hub, Connection
 
 class Drone(BaseModel):
     location: Hub|Connection
+    nb_action: int = 0
     id: int

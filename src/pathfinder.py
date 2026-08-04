@@ -1,15 +1,15 @@
 from . import Graph, Hub, Connection, Drone
 
-class pathfinder:
+class Pathfinder:
     ZONE_COST = {
         "normal": 1,
-        "priority": 1,
+        "priority": 0.99,
         "restricted": 2,
     }
     def __init__(self, graph: Graph) -> None:
         self.graph: Graph = graph
     
-    def find_shortest_path_one_drone(self) -> list[Hub|Connection]|None:
+    def find_shortest_path(self) -> list[Hub]|None:
         distances_from_start: dict[str, float] = {name: float('inf') for name in self.graph.hubs}
         distances_from_start[self.graph.start.name] = 0
         previous_hub: dict[str, str] = {}
@@ -17,6 +17,8 @@ class pathfinder:
         
         while unvisited:
             current_name = self.find_closest_unvisited(distances_from_start, unvisited)
+            if current_name is None or distances_from_start[current_name] == float('inf'):
+                return None
             if current_name is None:
                 break
             if current_name == self.graph.end.name:
@@ -43,7 +45,7 @@ class pathfinder:
             return None
         return min(unvisited, key=lambda name: distances[name])
     
-    def recreate_path(self, previous: dict[str, str], start_name: str, end_name: str) -> list[Hub|Connection]:
+    def recreate_path(self, previous: dict[str, str], start_name: str, end_name: str) -> list[Hub]:
         path_names = [end_name]
         current = end_name
         while current != start_name:
