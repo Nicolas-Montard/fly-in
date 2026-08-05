@@ -8,19 +8,26 @@ class Simulation:
         self.drones_path: list[Hub]|None = self.pathfinder.find_shortest_path()
         self.visualizer: Visualizer = Visualizer(self.graph)
         self.clock = pygame.time.Clock()
+        self.clock_speed: int = 1
         if self.drones_path is None:
             raise ValueError("Error: It is impossible to reach the end of the map")
     
     def run(self) -> None:
         self.visualizer.draw_graph()
         turn = 0
+        time_passed = 0.0
         while(any(True for drone in self.graph.drones
                   if drone.location != self.graph.end)):
-            turn += 1
-            self.update_drone_position()
+            time_per_tick = self.clock.tick(100) / 1000
             self.event_handler()
-            self.visualizer.render(turn)
-            self.clock.tick(1)
+            time_passed += time_per_tick
+            if time_passed >= 1 / self.clock_speed:
+                time_passed = 0.0
+                turn += 1
+                self.update_drone_position()
+                self.visualizer.render(turn)
+        self.wait_for_close()
+        
         
     def update_drone_position(self) -> None:
         for drone in self.graph.drones:
@@ -38,9 +45,10 @@ class Simulation:
             elif next_hub.get_max_capacity() > next_hub.current_drone and\
                 next_hub.zone_type != "restricted":
                 next_location = next_hub
-            elif next_hub.get_max_capacity() > next_hub.current_drone and\
-                next_hub.zone_type == "restricted":
-                next_location = self.graph.get_connection_between_hub(drone.location, next_hub)
+            elif next_hub.zone_type == "restricted":
+                connection = self.graph.get_connection_between_hub(drone.location, next_hub)
+                if connection.current_drone < connection.get_max_capacity():
+                    next_location = connection
             if next_location is None:
                 continue
             print(f"D{drone.id}-{drone.location.get_name()}", end=" ")
@@ -50,8 +58,19 @@ class Simulation:
             print(f"D{drone.id}-{drone.location.get_name()}")
     
     def event_handler(self):
+        keys = pygame.key.get_pressed()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or keys[pygame.K_ESCAPE]:
                 pygame.quit()
                 exit()
-
+            if keys[pygame.K_UP]:
+                if self.clock_speed < 60:
+                    self.clock_speed += 1
+            if keys[pygame.K_DOWN]:
+                if self.clock_speed > 1:
+                    self.clock_speed -= 1
+    
+    def wait_for_close(self) -> None:
+        while True:
+            self.clock.tick(100)
+            self.event_handler()

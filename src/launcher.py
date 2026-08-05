@@ -4,7 +4,7 @@ class Launcher():
     @staticmethod
     def launch():
         try:
-            parser = Parser("maps/hard/03_ultimate_challenge.txt")
+            parser = Parser("maps/easy/01_linear_path.txt")
             parser.read_data()
             graph = parser.build_graph()
             simulation = Simulation(graph)

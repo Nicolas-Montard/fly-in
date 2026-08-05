@@ -21,10 +21,15 @@ class Visualizer():
         self.max_y = max(y_coordinates)
         self.scale_x = (width - 2 * self.padding) / max(1, self.max_x - self.min_x)
         self.scale_y = (height - 2 * self.padding) / max(1, self.max_y - self.min_y)
+        
+        graph_width = (self.max_x - self.min_x) * self.scale_x
+        graph_height = (self.max_y - self.min_y) * self.scale_y
+        self.offset_x = self.padding + (width - 2 * self.padding - graph_width) / 2
+        self.offset_y = self.padding + (height - 2 * self.padding - graph_height) / 2
 
     def scale_value(self, x: int, y: int) -> tuple:
-        scaled_x = self.padding + ((x - self.min_x) * self.scale_x)
-        scaled_y = self.padding + ((y - self.min_y) * self.scale_y)
+        scaled_x = self.offset_x + ((x - self.min_x) * self.scale_x)
+        scaled_y = self.offset_y + ((y - self.min_y) * self.scale_y)
         return (int(scaled_x), int(scaled_y))
     
     def draw_graph(self):
@@ -55,9 +60,9 @@ class Visualizer():
                 position = self.scale_value(drone.location.x, drone.location.y)
                 center = (position[0] + offset, position[1] + offset)
             elif isinstance(drone.location, Connection):
-                x1, y1 = drone.location.hub1.x, drone.location.hub1.y
-                x2, y2 = drone.location.hub2.x, drone.location.hub2.y
-                center = self.scale_value(((x1 + x2) // 2) + offset, ((y1 + y2) // 2) + offset)
+                x1, y1 = self.scale_value(drone.location.hub1.x, drone.location.hub1.y)
+                x2, y2 = self.scale_value(drone.location.hub2.x, drone.location.hub2.y)
+                center = ((x1 + x2) // 2), ((y1 + y2) // 2)
             else:
                 continue
 
@@ -66,7 +71,6 @@ class Visualizer():
             self.screen.blit(drone_name, (center[0] - (drone_name.get_width() // 2),
                                         center[1] - (drone_name.get_height() // 2)))
                 
-    
     def draw_polygon(self, center, size, color):
         x, y = center
         points = [
