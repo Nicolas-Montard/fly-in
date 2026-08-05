@@ -60,7 +60,7 @@ class Parser:
             )
         try:
             nb_drones = int(split_line[1])
-            if nb_drones < 1:
+            if nb_drones < 0:
                 raise ValueError
         except ValueError:
             raise ParsingError(

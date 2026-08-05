@@ -16,9 +16,9 @@ class Simulation:
         self.clock_speed: int = 1
 
     def run(self) -> None:
-        self.visualizer.draw_graph()
         turn = 0
         time_passed = 0.0
+        self.visualizer.render(turn)
         while any(
             True for drone in self.graph.drones
                 if drone.location != self.graph.end
@@ -66,7 +66,6 @@ class Simulation:
                     next_location = connection
             if next_location is None:
                 continue
-            print(f"D{drone.id}-{drone.location.get_name()}", end=" ")
             self.graph.update_location(drone, next_location)
             if isinstance(next_location, Hub):
                 drone.nb_action += 1
