@@ -1,5 +1,6 @@
 from . import Connection, Hub, Drone
 
+
 class Graph:
     def __init__(self) -> None:
         self.hubs: dict[str, Hub] = {}
@@ -25,15 +26,18 @@ class Graph:
 
     def get_hub(self, name: str) -> Hub:
         return self.hubs[name]
-    
-    def update_location(self, drone: Drone, location: Connection|Hub) -> None:
+
+    def update_location(self, drone: Drone, location: Connection | Hub)\
+            -> None:
         drone.location.current_drone -= 1
         drone.location = location
         drone.location.current_drone += 1
-    
-    def get_connection_between_hub(self, hub1: Hub, hub2: Hub) -> Connection | None:
+
+    def get_connection_between_hub(self, hub1: Hub, hub2: Hub)\
+            -> Connection | None:
         for connection in self.connections:
-            if (connection.hub1 == hub1 and connection.hub2 == hub2) or \
-            (connection.hub1 == hub2 and connection.hub2 == hub1):
+            if (connection.hub1 == hub1 and connection.hub2 == hub2) or (
+                connection.hub1 == hub2 and connection.hub2 == hub1
+            ):
                 return connection
         return None

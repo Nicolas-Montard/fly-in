@@ -3,6 +3,7 @@ from typing import Literal
 
 ZoneType = Literal["normal", "blocked", "restricted", "priority"]
 
+
 class Hub(BaseModel):
     x: int
     y: int
@@ -15,6 +16,6 @@ class Hub(BaseModel):
 
     def get_name(self) -> str:
         return self.name
-    
+
     def get_max_capacity(self) -> int:
         return self.max_drones

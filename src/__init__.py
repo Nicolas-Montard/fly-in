@@ -17,5 +17,5 @@ __all__ = [
     "Parser",
     "Launcher",
     "Pathfinder",
-    "Simulation"
+    "Simulation",
 ]
