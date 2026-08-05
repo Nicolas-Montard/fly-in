@@ -115,7 +115,8 @@ class Graph:
         self.update_location(drone, hub2)
         drone.nb_action += 1
 
-    def move_to_hub_restricted(self, hub1: Hub, hub2: Hub, drone: Drone):
+    def move_to_hub_restricted(self, hub1: Hub, hub2: Hub, drone: Drone) \
+            -> None:
         """Start moving a drone toward a restricted destination hub.
 
         Places the drone onto the connection between hub1 and hub2 as
@@ -139,11 +140,11 @@ class Graph:
         if connection.drone_taking_connection >= connection.get_max_capacity():
             return
         if (connection.drone_taking_connection + hub2.current_drone) >= \
-            hub2.get_max_capacity() and hub2 != self.end \
-            and hub2.current_drone == 0:
+                hub2.get_max_capacity() and hub2 != self.end \
+                and hub2.current_drone == 0:
             return
         if (connection.drone_taking_connection + hub2.current_drone) >= \
-            hub2.get_max_capacity() + 1 and hub2 != self.end:
+                hub2.get_max_capacity() + 1 and hub2 != self.end:
             return
         self.update_location(drone, connection)
         connection.drone_taking_connection += 1

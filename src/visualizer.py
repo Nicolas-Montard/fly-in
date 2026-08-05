@@ -4,11 +4,11 @@ import pygame
 
 class Visualizer:
     """Renders a Graph and its drones to a pygame window.
- 
+
     Scales the graph's map coordinates to fit and center within a
     fixed-size window, then draws connections, hubs, and drones each
     frame.
- 
+
     Attributes:
         graph: The graph to render.
         screen: The pygame display surface.
@@ -40,12 +40,12 @@ class Visualizer:
 
     def calculate_size_of_graph(self, width: int, height: int) -> None:
         """Compute the scale and offset needed to fit and center the graph.
- 
+
         Determines the coordinate bounds of all hubs, derives a
         pixels-per-unit scale for each axis that fits the graph within
         the window (minus padding), and computes the offset needed to
         center the scaled graph within the available space.
- 
+
         Args:
             width: Width of the target window, in pixels.
             height: Height of the target window, in pixels.
@@ -70,11 +70,11 @@ class Visualizer:
 
     def scale_value(self, x: int, y: int) -> tuple:
         """Convert a hub's map coordinates into screen pixel coordinates.
- 
+
         Args:
             x: The map x coordinate.
             y: The map y coordinate.
- 
+
         Returns:
             The corresponding (pixel_x, pixel_y) position on screen.
         """
@@ -83,7 +83,8 @@ class Visualizer:
         return (int(scaled_x), int(scaled_y))
 
     def draw_graph(self) -> None:
-        """Draw connections, hubs, and drones, in that order (back to front)."""
+        """Draw connections, hubs, and drones,
+        in that order (back to front)."""
         self.draw_connection()
         self.draw_hubs()
         self.draw_drones()
@@ -97,7 +98,7 @@ class Visualizer:
 
     def draw_hubs(self) -> None:
         """Draw every hub as a colored circle with its name above it.
- 
+
         Falls back to black if a hub's color isn't a valid pygame color.
         """
         for hub in self.graph.hubs.values():
@@ -117,7 +118,7 @@ class Visualizer:
 
     def draw_drones(self) -> None:
         """Draw every drone as a small polygon with its id label.
- 
+
         Drones on a hub are centered on that hub; drones on a
         connection are centered on the connection's midpoint. A small
         per-drone offset is applied so drones sharing the same
@@ -153,9 +154,9 @@ class Visualizer:
                      size: int,
                      color: str) -> None:
         """Draw a small diamond-shaped polygon centered at a point.
- 
+
         Falls back to red if `color` isn't a valid pygame color.
- 
+
         Args:
             center: Pixel coordinates of the polygon's center.
             size: Distance, in pixels, from the center to each point
@@ -176,7 +177,7 @@ class Visualizer:
 
     def render(self, turn_number: int) -> None:
         """Clear the screen and draw a full frame for the given turn.
- 
+
         Args:
             turn_number: The current simulation turn, shown on screen.
         """

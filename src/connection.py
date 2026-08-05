@@ -3,7 +3,8 @@ from . import Hub
 
 
 class Connection(BaseModel):
-    """Bidirectional link between two hubs, allowing drones to travel between them.
+    """Bidirectional link between two hubs, allowing drones to travel between
+    them.
 
     A connection is used both as a direct edge in the graph and as an
     intermediate location for drones crossing a restricted zone (which
@@ -29,5 +30,6 @@ class Connection(BaseModel):
         return f"{self.hub1.name}-{self.hub2.name}"
 
     def get_max_capacity(self) -> int:
-        """Return the maximum number of drones this connection can hold at once."""
+        """Return the maximum number of drones this connection can hold at
+        once."""
         return self.max_link_capacity

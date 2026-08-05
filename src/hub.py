@@ -18,7 +18,8 @@ class Hub(BaseModel):
         y: Vertical coordinate of the hub on the map.
         name: Unique name identifying the hub.
         zone_type: The kind of zone this hub represents. Defaults to "normal".
-        color: Display color used for visual representation. Defaults to "black".
+        color: Display color used for visual representation.
+        Defaults to "black".
         max_drones: Maximum number of drones allowed to occupy this hub
             simultaneously. Ignored for the start and end hubs. Defaults to 1.
         current_drone: Number of drones currently occupying this hub.
