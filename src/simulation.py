@@ -38,38 +38,17 @@ class Simulation:
             if drone.location == self.graph.end:
                 continue
             next_hub = self.drones_path[drone.nb_action + 1]
-            next_location: Hub | Connection | None = None
             if isinstance(drone.location, Connection):
-                next_location = next_hub
-            elif next_hub == self.graph.end:
-                if self.graph.end.zone_type == "restricted":
-                    next_location = self.graph.get_connection_between_hub(
-                        drone.location, next_hub
-                    )
-                else:
-                    next_location = next_hub
-            elif (
-                next_hub.get_max_capacity() > next_hub.current_drone
-                and next_hub.zone_type != "restricted"
-            ):
-                next_location = next_hub
-            elif next_hub.zone_type == "restricted":
-                connection = self.graph.get_connection_between_hub(
-                    drone.location, next_hub
-                )
-                if connection is None:
-                    raise ValueError(
-                        "An error as occured in update drone:\
-                                     unable to find connection between hub"
-                    )
-                if connection.current_drone < connection.get_max_capacity():
-                    next_location = connection
-            if next_location is None:
-                continue
-            self.graph.update_location(drone, next_location)
-            if isinstance(next_location, Hub):
+                self.graph.update_location(drone, next_hub)
                 drone.nb_action += 1
-            print(f"D{drone.id}-{drone.location.get_name()}")
+            elif next_hub.zone_type == "restricted":
+                self.graph.move_to_hub_restricted(drone.location, next_hub,
+                                                  drone)
+            elif next_hub.zone_type != "restricted":
+                self.graph.move_to_hub(drone.location, next_hub, drone)
+        print("")
+        for connection in self.graph.connections:
+            connection.drone_taking_connection = 0
 
     def event_handler(self) -> None:
         keys = pygame.key.get_pressed()

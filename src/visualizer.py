@@ -79,7 +79,7 @@ class Visualizer:
                     drone.location.hub1.x, drone.location.hub1.y)
                 x2, y2 = self.scale_value(
                     drone.location.hub2.x, drone.location.hub2.y)
-                center = ((x1 + x2) // 2), ((y1 + y2) // 2)
+                center = ((x1 + x2) // 2) + offset, ((y1 + y2) // 2) + offset
             else:
                 continue
 
