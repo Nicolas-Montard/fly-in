@@ -2,16 +2,37 @@ from . import Graph, Hub
 
 
 class Pathfinder:
+    """Computes the shortest path from a graph's start hub to its end hub.
+
+    Uses Dijkstra's algorithm, where the cost of entering a hub
+    depends on its zone type (see ZONE_COST). Blocked zones, full
+    hubs, and full connections are treated as impassable.
+
+    Attributes:
+        graph: The graph to search.
+    """
+
     ZONE_COST = {
         "normal": 1,
         "priority": 0.99,
         "restricted": 2,
     }
+    """Movement cost of entering a hub, per zone type. Blocked zones
+    have no entry since they're skipped before this lookup."""
 
     def __init__(self, graph: Graph) -> None:
         self.graph: Graph = graph
 
     def find_shortest_path(self) -> list[Hub] | None:
+        """Find the lowest-cost path from the graph's start to its end.
+
+        Runs Dijkstra's algorithm over the graph, skipping blocked
+        zones and any hub or connection that cannot be reached.
+
+        Returns:
+            The path as an ordered list of Hub instances, from start
+            to end (inclusive), or None if the end is unreachable.
+        """
         distances_from_start: dict[str, float] = {
             name: float("inf") for name in self.graph.hubs
         }
@@ -55,6 +76,15 @@ class Pathfinder:
     def find_closest_unvisited(
         self, distances: dict[str, float], unvisited: set[str]
     ) -> str | None:
+        """Return the unvisited hub name with the smallest known distance.
+
+        Args:
+            distances: Current shortest known distance to each hub.
+            unvisited: Names of hubs not yet finalized by the algorithm.
+
+        Returns:
+            The closest unvisited hub's name, or None if `unvisited` is empty.
+        """
         if not unvisited:
             return None
         return min(unvisited, key=lambda name: distances[name])
@@ -62,6 +92,18 @@ class Pathfinder:
     def recreate_path(
         self, previous: dict[str, str], start_name: str, end_name: str
     ) -> list[Hub]:
+        """Rebuild the path from start to end using backtracking pointers.
+
+        Args:
+            previous: Maps each hub name to the name of the hub it was
+                reached from during the search.
+            start_name: Name of the path's starting hub.
+            end_name: Name of the path's ending hub.
+
+        Returns:
+            The path as an ordered list of Hub instances, from
+            `start_name` to `end_name` (inclusive).
+        """
         path_names = [end_name]
         current = end_name
         while current != start_name:

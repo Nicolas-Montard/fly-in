@@ -3,17 +3,48 @@ from . import Graph, Hub, Connection, Drone
 
 
 class ParsingError(Exception):
-    def __init__(self, message: str, ligne: int | None = None):
-        self.ligne = ligne
+    """Raised when the map file contains invalid or malformed data.
+ 
+    Carries the offending line number (when known) so the caller can
+    report a precise, actionable error message to the user.
+ 
+    Attributes:
+        message: Description of what went wrong.
+        line: Line number in the map file where the error occurred,
+            or None if the error isn't tied to a specific line.
+    """
+    def __init__(self, message: str, line: int | None = None):
+        self.ligne = line
         self.message = message
-        if ligne is not None:
-            full_message = f"Error at line {ligne} of the map: {message}"
+        if line is not None:
+            full_message = f"Error at line {line} of the map: {message}"
         else:
             full_message = f"Error in the map: {message}"
         super().__init__(full_message)
 
 
 class Parser:
+    """Parses a map file into validated data, then builds a Graph from it.
+ 
+    Reads the map file line by line, validating syntax and semantics
+    as it goes (unique names, valid coordinates, valid metadata,
+    known zone types, no duplicate connections, etc.), then assembles
+    the parsed data into a ready-to-use Graph via `build_graph`.
+ 
+    Attributes:
+        map_path: Path to the map file to parse.
+        counter_line: Current line number being processed, used for
+            error reporting.
+        data: Parsed top-level data (nb_drones, start_hub, end_hub,
+            hubs, connections).
+        hubs: Parsed regular (non start/end) hub definitions, as raw dicts.
+        connections: Parsed connection definitions, as raw dicts.
+        hub_names: Set of hub names already seen, used to detect duplicates.
+        hub_coord: Set of hub coordinates already seen, used to detect
+            duplicates.
+        connection_seen: Set of normalized (sorted) hub name pairs
+            already connected, used to detect duplicate connections.
+    """
     def __init__(self, map_path: str) -> None:
         self.map_path: str = map_path
         self.counter_line: int = 0
@@ -27,6 +58,18 @@ class Parser:
         self.connection_seen: set[tuple[str, str]] = set()
 
     def read_data(self) -> None:
+        """Read and validate the entire map file, line by line.
+ 
+        Skips blank lines and comments, dispatches each meaningful
+        line to the appropriate validation method based on its key
+        (nb_drones, start_hub, end_hub, hub, connection), and
+        populates `self.data`, `self.hubs`, and `self.connections`
+        as it goes.
+ 
+        Raises:
+            ParsingError: If any line is malformed, uses an unknown
+                key, or otherwise violates the map format.
+        """
         with open(self.map_path, "r") as file:
             start_line = next(file).lstrip(" ").rstrip("\r\n")
             self.counter_line += 1
@@ -52,6 +95,15 @@ class Parser:
                                    self.counter_line)
 
     def verif_nb_drone_line(self, line: str) -> None:
+        """Validate the map's first line and extract the drone count.
+ 
+        Args:
+            line: The first non-comment, non-blank line of the map file.
+ 
+        Raises:
+            ParsingError: If the line isn't a valid `nb_drones: <int>`
+                declaration, or the value isn't a non-negative integer.
+        """
         split_line = self.split_line(line)
         if split_line[0] != "nb_drones":
             raise ParsingError(
@@ -70,6 +122,22 @@ class Parser:
         self.data["nb_drones"] = nb_drones
 
     def verif_hub_line(self, line: str) -> None:
+        """Validate a hub definition line and store the parsed hub.
+ 
+        Handles `start_hub:`, `end_hub:`, and `hub:` lines alike,
+        parsing the name, coordinates, and optional metadata. Regular
+        hubs are appended to `self.hubs`; start_hub/end_hub are stored
+        directly in `self.data`.
+ 
+        Args:
+            line: A `start_hub:`, `end_hub:`, or `hub:` line from the
+                map file.
+ 
+        Raises:
+            ParsingError: If start_hub/end_hub is defined more than
+                once, the value count is wrong, the name/coordinates
+                are invalid, or the metadata is invalid.
+        """
         split_line = self.split_line(line)
         if split_line[0] == "start_hub":
             if "start_hub" in self.data:
@@ -100,6 +168,19 @@ class Parser:
             self.data[split_line[0]] = hub
 
     def format_metadata(self, metadata: str) -> dict:
+        """Parse a `[key=value key2=value2 ...]` metadata block into a dict.
+ 
+        Args:
+            metadata: The raw metadata block, including its surrounding
+                brackets.
+ 
+        Returns:
+            A dict mapping each metadata key to its raw string value.
+ 
+        Raises:
+            ParsingError: If the block doesn't start with `[` and end
+                with `]`.
+        """
         if metadata[0] != "[" or metadata[-1] != "]":
             raise ParsingError(
                 "The metadata must begin and end with [], "
@@ -115,6 +196,15 @@ class Parser:
         return dict_metadata
 
     def verif_hub_name(self, name: str) -> None:
+        """Validate a hub name and register it as seen.
+ 
+        Args:
+            name: The hub name to validate.
+ 
+        Raises:
+            ParsingError: If the name contains a dash, or a hub with
+                this name has already been defined.
+        """
         if "-" in name:
             raise ParsingError(
                 f"The name of the hub contain a dashes: {name}",
@@ -128,6 +218,16 @@ class Parser:
         self.hub_names.add(name)
 
     def verif_hub_coord(self, x_str: str, y_str: str) -> None:
+        """Validate a hub's coordinates and register them as seen.
+ 
+        Args:
+            x_str: The hub's x coordinate, as a raw string.
+            y_str: The hub's y coordinate, as a raw string.
+ 
+        Raises:
+            ParsingError: If the coordinates aren't valid integers, or
+                these exact coordinates are already used by another hub.
+        """
         try:
             x, y = int(x_str), int(y_str)
         except ValueError:
@@ -141,6 +241,21 @@ class Parser:
         self.hub_coord.add((x, y))
 
     def verif_hub_metadata(self, metadata: dict) -> None:
+        """Validate a hub's metadata in place and normalize its keys.
+ 
+        Checks that only known keys are present, that `zone` (if any)
+        is a valid zone type, and that `max_drones` (if any) is a
+        non-negative integer. Converts `max_drones` to an int, and
+        renames the `zone` key to `zone_type` to match the Hub model.
+ 
+        Args:
+            metadata: The raw metadata dict to validate, modified in place.
+ 
+        Raises:
+            ParsingError: If an unknown key is present, `zone` isn't a
+                valid zone type, or `max_drones` isn't a valid
+                non-negative integer.
+        """
         zone_type = ("normal", "blocked", "restricted", "priority")
         for key, value in metadata.items():
             if key not in ("zone", "color", "max_drones"):
@@ -172,6 +287,18 @@ class Parser:
             metadata["zone_type"] = metadata.pop("zone")
 
     def split_line(self, line: str) -> list[str]:
+        """Split a line into its key and value, on the first ':'.
+ 
+        Args:
+            line: The raw line to split.
+ 
+        Returns:
+            A two-element list: [key, value], with the value stripped
+            of leading/trailing spaces.
+ 
+        Raises:
+            ParsingError: If the line doesn't contain a ':' separator.
+        """
         split_line = line.split(":", 1)
         if len(split_line) <= 1:
             raise ParsingError(
@@ -182,6 +309,21 @@ class Parser:
         return split_line
 
     def verif_connection(self, line: str) -> None:
+        """Validate a connection line and store the parsed connection.
+ 
+        Parses the `hub1-hub2` name pair, checks both hubs are already
+        defined, rejects duplicate connections (regardless of hub
+        order), and parses any optional metadata.
+ 
+        Args:
+            line: A `connection:` line from the map file.
+ 
+        Raises:
+            ParsingError: If the hub pair isn't formatted as exactly
+                one dash-separated pair, either hub name is unknown,
+                the connection is already defined, or the metadata is
+                invalid.
+        """
         split_line = self.split_line(line)
         values = split_line[1].split(" ")
         if values[0].count("-") != 1:
@@ -208,6 +350,19 @@ class Parser:
         self.connections.append(connection)
 
     def verif_connection_metadata(self, metadata: dict) -> None:
+        """Validate a connection's metadata in place.
+ 
+        Checks that only `max_link_capacity` is present, and that its
+        value is a non-negative integer (converting it from string to
+        int in the process).
+ 
+        Args:
+            metadata: The raw metadata dict to validate, modified in place.
+ 
+        Raises:
+            ParsingError: If an unknown key is present, or
+                `max_link_capacity` isn't a valid non-negative integer.
+        """
         for key, value in metadata.items():
             if key not in ("max_link_capacity",):
                 raise ParsingError(
@@ -231,6 +386,18 @@ class Parser:
                     )
 
     def build_graph(self) -> Graph:
+        """Build a ready-to-use Graph from the previously parsed data.
+ 
+        Must be called after `read_data`. Constructs the start and end
+        hubs, all regular hubs, all connections, and one drone per
+        `nb_drones`, all starting at the start hub.
+ 
+        Returns:
+            The fully assembled Graph.
+ 
+        Raises:
+            ParsingError: If no start_hub or no end_hub was defined.
+        """
         if "start_hub" not in self.data:
             raise ParsingError("no start_hub defined")
         if "end_hub" not in self.data:
