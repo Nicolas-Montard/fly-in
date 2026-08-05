@@ -40,6 +40,10 @@ class Pathfinder:
                     continue
                 if neighbor.name not in unvisited:
                     continue
+                if neighbor.get_max_capacity() < 1:
+                    continue
+                if connection.get_max_capacity() < 1:
+                    continue
                 cost = self.ZONE_COST[neighbor.zone_type]
                 new_dist = distances_from_start[current_name] + cost
 

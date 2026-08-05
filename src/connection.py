@@ -5,7 +5,7 @@ from . import Hub
 class Connection(BaseModel):
     hub1: Hub
     hub2: Hub
-    max_link_capacity: int = Field(default=1, gt=0)
+    max_link_capacity: int = Field(default=1, ge=0)
     current_drone: int = 0
     drone_taking_connection: int = 0
 

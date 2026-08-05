@@ -163,9 +163,9 @@ class Parser:
                         f"The metadata {key} is not a valid integer",
                         self.counter_line
                     )
-                if metadata[key] < 1:
+                if metadata[key] < 0:
                     raise ParsingError(
-                        f"The metadata {key} cannot be inferior to 1",
+                        f"The metadata {key} cannot be inferior to 0",
                         self.counter_line
                     )
         if "zone" in metadata:
@@ -224,9 +224,9 @@ class Parser:
                         f"The metadata {key} is not a valid integer",
                         self.counter_line
                     )
-                if metadata[key] < 1:
+                if metadata[key] < 0:
                     raise ParsingError(
-                        f"The metadata {key} cannot be inferior to 1",
+                        f"The metadata {key} cannot be inferior to 0",
                         self.counter_line
                     )
 
